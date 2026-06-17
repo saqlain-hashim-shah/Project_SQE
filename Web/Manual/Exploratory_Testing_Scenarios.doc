@@ -1,0 +1,164 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<title>Exploratory Testing Scenarios - Online Bookstore</title>
+<style>
+    body { font-family: Calibri, sans-serif; }
+    h1 { text-align: center; color: #1F3864; border-bottom: 2px solid #1F3864; padding-bottom: 10px; }
+    h3 { color: #2F5496; margin-top: 25px; font-weight: bold; }
+    p.subtitle { text-align: center; font-size: 12pt; color: #555; font-style: italic; margin-bottom: 30px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; margin-left: 10px; }
+    th, td { border: 1px solid #8FAADC; padding: 10px; text-align: left; vertical-align: top; }
+    th { background-color: #D9E1F2; width: 22%; font-weight: bold; color: #1F3864; }
+</style>
+</head>
+<body>
+
+<h1>Topic Name: Exploratory Testing Scenarios</h1>
+<p class="subtitle">Applied to the Online Bookstore (MERN Stack) Project</p>
+
+<h3>Test Case 1: Entering Impossible Book Ratings</h3>
+<p>• <b>What we are testing:</b> Can an admin break the UI by submitting a crazy or impossible rating when adding a book?</p>
+<table>
+    <tr><th>Field</th><td>Description</td></tr>
+    <tr><th>Objective</th><td>See if the system accepts impossible ratings like negative numbers, decimals over 5, or massive numbers.</td></tr>
+    <tr><th>What to Do</th><td>
+        1. Log into the Admin Dashboard and Add a Book.<br>
+        2. When it asks for a rating, type -5, 250, or 9.5.
+    </td></tr>
+    <tr><th>What Should Happen</th><td>The system should reject negative ratings and anything above a maximum 5.0 rating.</td></tr>
+    <tr><th>Why it Breaks</th><td>If the Mongoose schema validator (min: 0, max: 5) is bypassed on the backend, the database blindly accepts 250 as a valid rating, permanently breaking the frontend UI star rendering component.</td></tr>
+</table>
+
+<h3>Test Case 2: Server Crashing on First Run (Missing Folders)</h3>
+<p>• <b>What we are testing:</b> Does the application survive if deployed fresh without historical file directories?</p>
+<table>
+    <tr><th>Field</th><td>Description</td></tr>
+    <tr><th>Objective</th><td>Check if the Admin panel allows uploads before the server's "uploads/" directory is manually created.</td></tr>
+    <tr><th>What to Do</th><td>
+        1. Delete the "uploads" folder from your project backend.<br>
+        2. Open the app, log in as Admin, and attempt to upload a book PDF.
+    </td></tr>
+    <tr><th>What Should Happen</th><td>The app should dynamically generate the uploads folder using fs.mkdirSync() and save the file smoothly.</td></tr>
+    <tr><th>Why it Breaks</th><td>Multer throws an ENOENT (Error No Entity) if a folder doesn't exist. Instead of creating it safely, the Node.js server instantly shuts down, closing the backend completely.</td></tr>
+</table>
+
+<h3>Test Case 3: Typing Decimals in API Pagination</h3>
+<p>• <b>What we are testing:</b> What happens if a curious user manipulates the URL and adds decimals to page numbers?</p>
+<table>
+    <tr><th>Field</th><td>Description</td></tr>
+    <tr><th>Objective</th><td>Test how the API handles decimal numbers in URL parameters that exclusively expect whole integers.</td></tr>
+    <tr><th>What to Do</th><td>
+        1. Go to the Home Page.<br>
+        2. Manually edit the URL or API request to say ?page=1.5 and press Enter.
+    </td></tr>
+    <tr><th>What Should Happen</th><td>The system should round the number down to 1 or return a clean "Page Not Found" validation error.</td></tr>
+    <tr><th>Why it Breaks</th><td>The backend calculates skip = (page - 1) * limit. Passing 1.5 forces MongoDB to attempt to skip a fractional 6.5 items, throwing a cast error and freezing the homepage loading state.</td></tr>
+</table>
+
+<h3>Test Case 4: Fetching Books on an Empty Database</h3>
+<p>• <b>What we are testing:</b> Can a user load the storefront if absolutely no books are available in the system yet?</p>
+<table>
+    <tr><th>Field</th><td>Description</td></tr>
+    <tr><th>Objective</th><td>See if the React app handles a situation where the MongoDB Book collection is completely empty.</td></tr>
+    <tr><th>What to Do</th><td>
+        1. Go to your MongoDB database and delete all book collections.<br>
+        2. Load the homepage as a normal user.
+    </td></tr>
+    <tr><th>What Should Happen</th><td>The app should render a friendly "No books available right now, check back later!" message.</td></tr>
+    <tr><th>Why it Breaks</th><td>If the frontend array mapping (books.map) doesn't check if the array is empty or undefined first, React throws a fatal "Cannot read properties of undefined" error, crashing the entire visual DOM.</td></tr>
+</table>
+
+<h3>Test Case 5: Writing Super Long Book Descriptions</h3>
+<p>• <b>What we are testing:</b> Does a massive text description cause the database or UI to crash and overflow?</p>
+<table>
+    <tr><th>Field</th><td>Description</td></tr>
+    <tr><th>Objective</th><td>Ensure that an admin pasting a massive 10,000-word paragraph for a book description doesn't break the CSS layout.</td></tr>
+    <tr><th>What to Do</th><td>
+        1. Go to Admin Dashboard -> Add Book.<br>
+        2. Paste a continuous paragraph that is over 10,000 characters long into the Description field.
+    </td></tr>
+    <tr><th>What Should Happen</th><td>The database safely stores it, and the frontend uses CSS "text-overflow: ellipsis" or a "Read More" button to truncate it on cards.</td></tr>
+    <tr><th>Why it Breaks</th><td>Without CSS limits, a 10,000-word description stretches the React BookCard component infinitely downwards, breaking the flexbox grid layout of the store.</td></tr>
+</table>
+
+<h3>Test Case 6: Fake/Broken Email Formats</h3>
+<p>• <b>What we are testing:</b> How easily can a malicious user trick the email registration validator?</p>
+<table>
+    <tr><th>Field</th><td>Description</td></tr>
+    <tr><th>Objective</th><td>See if the registration blocks completely broken emails like abc@.com or a@b..</td></tr>
+    <tr><th>What to Do</th><td>
+        1. Start a User Registration.<br>
+        2. When asked for email, type test@.com (notice the dot immediately after the @).
+    </td></tr>
+    <tr><th>What Should Happen</th><td>The system should recognize this is a broken email format and reject it.</td></tr>
+    <tr><th>Why it Breaks</th><td>Mongoose only enforces that the field is a required string. Without a strict Regex match schema, the system blindly accepts it as a real email, bloating your user base with fake data.</td></tr>
+</table>
+
+<h3>Test Case 7: Text Strings in Numeric API Parameters</h3>
+<p>• <b>What we are testing:</b> What happens if someone types text where a backend API is mathematically looking for a number?</p>
+<table>
+    <tr><th>Field</th><td>Description</td></tr>
+    <tr><th>Objective</th><td>Check if typing words breaks input parameters that are mathematically evaluated (like limits or pages).</td></tr>
+    <tr><th>What to Do</th><td>
+        1. Send an API request to the backend.<br>
+        2. In the query parameter for ?page=, type "three" (letters) instead of 3 (digit).
+    </td></tr>
+    <tr><th>What Should Happen</th><td>The API should say "Invalid entry, numbers only" (HTTP 400 Bad Request).</td></tr>
+    <tr><th>Why it Breaks</th><td>Typing letters causes the calculation skip = ("three" - 1) * limit to evaluate to NaN (Not a Number). Passing NaN into Mongoose crashes the query pipeline entirely.</td></tr>
+</table>
+
+<h3>Test Case 8: Invalid MongoDB IDs in Book Detail URLs</h3>
+<p>• <b>What we are testing:</b> Can a user bypass security or crash the app by editing the MongoDB _id in the URL?</p>
+<table>
+    <tr><th>Field</th><td>Description</td></tr>
+    <tr><th>Objective</th><td>Test if the system stops users from putting normal text into the strict 24-character hex MongoDB ID field.</td></tr>
+    <tr><th>What to Do</th><td>
+        1. Click on a book to view details (e.g., /book/654a1b2c...).<br>
+        2. Manually change the URL to /book/ABCDEFGHIJKLM.
+    </td></tr>
+    <tr><th>What Should Happen</th><td>The backend should catch the invalid ID format and return a 404 "Book Not Found" gracefully.</td></tr>
+    <tr><th>Why it Breaks</th><td>Mongoose expects a strict 24-character hex string. Passing "ABCDEFGHIJKLM" directly to findById() causes a fatal CastError on the server, crashing the Node process if not wrapped in a try/catch block.</td></tr>
+</table>
+
+<h3>Test Case 9: Accessing Non-Existent Routes</h3>
+<p>• <b>What we are testing:</b> What happens if you type a random path at the URL bar?</p>
+<table>
+    <tr><th>Field</th><td>Description</td></tr>
+    <tr><th>Objective</th><td>Ensure the React app doesn't go completely blank if a user makes a typo in the URL.</td></tr>
+    <tr><th>What to Do</th><td>
+        1. Go to your bookstore website.<br>
+        2. Type a completely unrelated route like /randompage123 or /hello.
+    </td></tr>
+    <tr><th>What Should Happen</th><td>The app should show a friendly 404 Not Found page and a button to return to the Home page.</td></tr>
+    <tr><th>Why it Breaks</th><td>If React Router does not have a catch-all route (path="*"), typing an invalid URL bypasses all known components and renders a completely blank white screen.</td></tr>
+</table>
+
+<h3>Test Case 10: Uploading the Exact Same Book Twice</h3>
+<p>• <b>What we are testing:</b> What happens if an admin accidentally uploads the exact same book twice?</p>
+<table>
+    <tr><th>Field</th><td>Description</td></tr>
+    <tr><th>Objective</th><td>Verify if the database blocks duplicate entries to prevent store clutter.</td></tr>
+    <tr><th>What to Do</th><td>
+        1. Log in as an Admin and add a book named "The Great Gatsby".<br>
+        2. Fill out the form again and upload "The Great Gatsby" a second time.
+    </td></tr>
+    <tr><th>What Should Happen</th><td>The app should tell you that this book title already exists in the system.</td></tr>
+    <tr><th>Why it Breaks</th><td>Because the Book.js model lacks a unique: true property on the title, it skips duplication logic and saves the same book twice, cluttering the user interface and doubling storage.</td></tr>
+</table>
+
+<h3>Test Case 11: Extreme Admin Password Guesses (Brute-Force Attack)</h3>
+<p>• <b>What we are testing:</b> Can a hacker sit there and guess the admin password forever without the app stopping them?</p>
+<table>
+    <tr><th>Field</th><td>Description</td></tr>
+    <tr><th>Objective</th><td>Test if the application restricts access or blocks the system after too many failed Admin login attempts via the API.</td></tr>
+    <tr><th>What to Do</th><td>
+        1. Open an API tester like Postman.<br>
+        2. Fire 1,000 rapid login POST requests to /api/auth/login with random wrong passwords.
+    </td></tr>
+    <tr><th>What Should Happen</th><td>After 5 to 10 wrong attempts, the backend should rate-limit the IP address or lock the account temporarily.</td></tr>
+    <tr><th>Why it Breaks</th><td>Because Express.js lacks rate-limiting middleware (like express-rate-limit), an attacker can try thousands of times per minute. This eats up server CPU while hashing passwords using bcrypt, causing a Denial of Service.</td></tr>
+</table>
+
+</body>
+</html>

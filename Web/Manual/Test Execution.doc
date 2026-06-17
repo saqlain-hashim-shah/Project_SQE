@@ -1,0 +1,161 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<title>Online Bookstore - Test Execution Plan</title>
+<style>
+    body { font-family: Calibri, sans-serif; font-size: 11pt; }
+    h1 { text-align: center; color: #2F5496; }
+    h2 { color: #2F5496; margin-top: 30px; border-bottom: 2px solid #2F5496; padding-bottom: 5px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 10pt; }
+    th, td { border: 1px solid #8FAADC; padding: 6px; text-align: left; vertical-align: top; }
+    th { background-color: #D9E1F2; font-weight: bold; color: #2F5496; }
+    .pass { color: green; font-weight: bold; }
+    .fail { color: red; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h1>Online Bookstore - Comprehensive Test Execution Plan</h1>
+
+<h2>Phase 1: User Account & Profile Validations</h2>
+<table>
+    <tr>
+        <th>Test Case ID</th><th>Test Case Title</th><th>Test Objective</th><th>Preconditions</th><th>Test Steps</th><th>Test Data</th><th>Expected Result</th><th>Actual Result</th><th>Status</th><th>Priority</th><th>Tested By</th><th>Test Date</th>
+    </tr>
+    <tr>
+        <td>TC-01</td><td>Valid User Registration</td><td>Verify successful profile creation with clean inputs.</td><td>Application on Registration page.</td><td>1. Enter valid details.<br>2. Submit.</td><td>Name: John<br>Email: john@gmail.com<br>Pass: pass123</td><td>"User created successfully" message appears and JWT token is issued.</td><td>As Expected.</td><td class="pass">Pass</td><td>High</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-02</td><td>Valid Admin Login</td><td>Verify successful admin authentication.</td><td>Application on Login page.</td><td>1. Enter admin credentials.<br>2. Submit.</td><td>Email: admin@book.com<br>Pass: admin123</td><td>"Login successful" message and user object contains isAdmin: true.</td><td>As Expected.</td><td class="pass">Pass</td><td>High</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-03</td><td>Name Space Check</td><td>Verify system accepts spaces in names.</td><td>Registration prompt active.</td><td>1. Enter a name with space characters.</td><td>Name: John Doe</td><td>Name is accepted, trimmed by Mongoose, and saved properly.</td><td>As Expected.</td><td class="pass">Pass</td><td>Medium</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-04</td><td>Duplicate Email Check</td><td>Prevent registering an already existing email.</td><td>Registration prompt active.</td><td>1. Register with an existing email.</td><td>Email: john@gmail.com</td><td>System returns HTTP 400: "User already exists".</td><td>As Expected.</td><td class="pass">Pass</td><td>High</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-05</td><td>Password Length Guardrails</td><td>Prevent registration with short passwords.</td><td>Registration prompt active.</td><td>1. Input password under 6 characters.</td><td>Pass: 12345</td><td>Mongoose rejects it due to minlength: 6 constraint.</td><td>As Expected.</td><td class="pass">Pass</td><td>High</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-06</td><td>Admin Escalation Guardrails</td><td>Ensure standard users cannot self-assign admin roles.</td><td>Registration API active.</td><td>1. Send POST request with isAdmin: true.</td><td>isAdmin: true</td><td>Backend ignores the isAdmin payload or overrides to default false.</td><td>As Expected.</td><td class="pass">Pass</td><td>Critical</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-07</td><td>Password Boundary Verification</td><td>Verify validation exactly at 6 characters.</td><td>Registration prompt active.</td><td>1. Input password exactly 6 chars.</td><td>Pass: 123456</td><td>System accepts value and generates user profile.</td><td>As Expected.</td><td class="pass">Pass</td><td>High</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-08</td><td>Login Failure Check</td><td>Verify system rejects wrong passwords safely.</td><td>Login prompt active.</td><td>1. Enter valid email, wrong password.</td><td>Pass: wrongpass</td><td>Returns "Invalid credentials" without revealing which field is wrong.</td><td>As Expected.</td><td class="pass">Pass</td><td>High</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-09</td><td>Missing Input Check</td><td>Ensure required fields cannot be left blank.</td><td>Registration prompt active.</td><td>1. Leave email field blank.</td><td>Email: [Blank]</td><td>Frontend blocks submission or backend returns 400 Required Error.</td><td>As Expected.</td><td class="pass">Pass</td><td>Medium</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-10</td><td>Email Structure: Missing At-Symbol</td><td>Catch email entries lacking @ component.</td><td>Registration prompt active.</td><td>1. Provide email without @.</td><td>Email: johngmail.com</td><td>Triggers frontend HTML5 email validation or backend failure.</td><td>As Expected.</td><td class="pass">Pass</td><td>Medium</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-11</td><td>Email Structure: Missing Period</td><td>Catch email entries lacking domain dot.</td><td>Registration prompt active.</td><td>1. Provide email without period.</td><td>Email: john@gmailcom</td><td>Fails regex parser logic if implemented.</td><td>Requires Regex</td><td class="fail">Fail</td><td>Medium</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-12</td><td>Email Structure: Inverted Markers</td><td>Reject malformed string layout.</td><td>Registration prompt active.</td><td>1. Insert dot prior to @.</td><td>Email: john.com@gmail</td><td>Inverted markers fail system rules.</td><td>Requires Regex</td><td class="fail">Fail</td><td>Low</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-13</td><td>Email Case Sensitivity</td><td>Verify emails are saved uniformly.</td><td>Registration prompt active.</td><td>1. Input email with uppercase letters.</td><td>Email: JOHN@GMAIL.COM</td><td>Mongoose lowercase: true converts it to john@gmail.com cleanly.</td><td>As Expected.</td><td class="pass">Pass</td><td>Medium</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-14</td><td>SQL/NoSQL Injection Check</td><td>Prevent NoSQL operators in login forms.</td><td>Login prompt active.</td><td>1. Pass NoSQL operator as email.</td><td>Email: {"$gt": ""}</td><td>System strips operators or fails safely.</td><td>As Expected.</td><td class="pass">Pass</td><td>Critical</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-15</td><td>JWT Payload Validation</td><td>Verify user data attached to the generated token.</td><td>Login successful.</td><td>1. Decode JWT payload.</td><td>N/A</td><td>Token contains correct user _id and matches secret key.</td><td>As Expected.</td><td class="pass">Pass</td><td>High</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+</table>
+
+<h2>Phase 2: Book Catalog & Search Optimization</h2>
+<table>
+    <tr>
+        <th>Test Case ID</th><th>Test Case Title</th><th>Test Objective</th><th>Preconditions</th><th>Test Steps</th><th>Test Data</th><th>Expected Result</th><th>Actual Result</th><th>Status</th><th>Priority</th><th>Tested By</th><th>Test Date</th>
+    </tr>
+    <tr>
+        <td>TC-16</td><td>Search Engine: Single Word</td><td>Verify search triggers on exact title match.</td><td>Storefront active.</td><td>1. Search for a keyword.</td><td>Search: "Potter"</td><td>Retrieves books with "Potter" in title/description via $text index.</td><td>As Expected.</td><td class="pass">Pass</td><td>High</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-17</td><td>Search Engine: Author Match</td><td>Verify author-based querying filters correctly.</td><td>Storefront active.</td><td>1. Search using author name.</td><td>Author: "Rowling"</td><td>Returns matching author documents using Regex('i').</td><td>As Expected.</td><td class="pass">Pass</td><td>High</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-18</td><td>Category Filter: Exact Match</td><td>Verify category dropdown filters the dataset.</td><td>Storefront active.</td><td>1. Select category filter.</td><td>Category: Fiction</td><td>Dispatches filtered results matching exact enum.</td><td>As Expected.</td><td class="pass">Pass</td><td>High</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-19</td><td>Category Filter: Invalid Range</td><td>Gauge response when category doesn't exist.</td><td>Storefront active.</td><td>1. Inject invalid category via URL.</td><td>Category: Space</td><td>Returns empty array without crashing.</td><td>As Expected.</td><td class="pass">Pass</td><td>Low</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-20</td><td>Pagination: Page 2 Check</td><td>Verify skip logic traverses documents cleanly.</td><td>Storefront active.</td><td>1. Click Page 2 button.</td><td>Page: 2</td><td>Retrieves books 13-24 safely with limit=12.</td><td>As Expected.</td><td class="pass">Pass</td><td>High</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+</table>
+
+<h2>Phase 3: Book Details & User Interactions</h2>
+<table>
+    <tr>
+        <th>Test Case ID</th><th>Test Case Title</th><th>Test Objective</th><th>Preconditions</th><th>Test Steps</th><th>Test Data</th><th>Expected Result</th><th>Actual Result</th><th>Status</th><th>Priority</th><th>Tested By</th><th>Test Date</th>
+    </tr>
+    <tr>
+        <td>TC-21</td><td>Book Details: Valid Fetch</td><td>Verify individual book lookups.</td><td>Valid ID exists.</td><td>1. Click on a book card.</td><td>ID: [Valid_ID]</td><td>Component loads BookDetails.jsx with image, title, and file size.</td><td>As Expected.</td><td class="pass">Pass</td><td>High</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-22</td><td>Book Details: Invalid ID</td><td>Handle malformed object IDs cleanly.</td><td>User modifies URL.</td><td>1. Access /book/9999.</td><td>ID: 9999</td><td>Backend catches CastError; Frontend shows 404 or redirect.</td><td>Unhandled Error</td><td class="fail">Fail</td><td>Medium</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-23</td><td>Download Action: Logged In</td><td>Verify protected download endpoint works.</td><td>User is logged in.</td><td>1. Click Download on a book.</td><td>Token: Active</td><td>File streams to user machine; downloadCount increments +1.</td><td>As Expected.</td><td class="pass">Pass</td><td>Critical</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-24</td><td>Download Action: Guest</td><td>Prevent unauthorized file access.</td><td>No token exists.</td><td>1. Trigger API download directly.</td><td>Token: Null</td><td>authenticate middleware blocks access with HTTP 401.</td><td>As Expected.</td><td class="pass">Pass</td><td>High</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-25</td><td>Favorites: Toggle Status</td><td>Verify add/remove logic on User profile array.</td><td>User is logged in.</td><td>1. Click heart icon twice.</td><td>ID: [Valid_ID]</td><td>First click pushes ID to array; Second click removes it (filter).</td><td>As Expected.</td><td class="pass">Pass</td><td>Medium</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+</table>
+
+<h2>Phase 4: Admin Dashboard & Inventory Tracking</h2>
+<table>
+    <tr>
+        <th>Test Case ID</th><th>Test Case Title</th><th>Test Objective</th><th>Preconditions</th><th>Test Steps</th><th>Test Data</th><th>Expected Result</th><th>Actual Result</th><th>Status</th><th>Priority</th><th>Tested By</th><th>Test Date</th>
+    </tr>
+    <tr>
+        <td>TC-26</td><td>Inventory View: Admin Load</td><td>Verify admin can see full dataset tools.</td><td>Admin logged in.</td><td>1. Go to /admin.</td><td>N/A</td><td>Renders AdminDashboard.jsx with Add/Edit/Delete tables.</td><td>As Expected.</td><td class="pass">Pass</td><td>High</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-27</td><td>Inventory Add: File Upload</td><td>Confirm Multer intercepts and saves binaries.</td><td>Admin form active.</td><td>1. Upload a PDF + Cover image.</td><td>Files: .pdf, .jpg</td><td>Files saved to uploads/; paths saved to DB Book schema.</td><td>As Expected.</td><td class="pass">Pass</td><td>Critical</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-28</td><td>Inventory Add: Missing File</td><td>Ensure backend rejects book creation if no file.</td><td>Admin form active.</td><td>1. Submit without PDF.</td><td>File: Null</td><td>Backend validation rejects request, no ghost records created.</td><td>As Expected.</td><td class="pass">Pass</td><td>High</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-29</td><td>Inventory Delete: Success</td><td>Verify DB removal of target book.</td><td>Book exists in DB.</td><td>1. Click Delete button.</td><td>ID: [Active_ID]</td><td>Node drops from DB, triggering UI state refresh on admin panel.</td><td>As Expected.</td><td class="pass">Pass</td><td>High</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-30</td><td>Inventory Update: Enum Match</td><td>Validate category changes match Schema Enum.</td><td>Editing a book.</td><td>1. Set category to 'Space'.</td><td>Cat: Space</td><td>Fails Schema validation (not in 'Fiction', 'Science', etc).</td><td>As Expected.</td><td class="pass">Pass</td><td>Medium</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+</table>
+
+<h2>Phase 5: Security, Storage & System Loops</h2>
+<table>
+    <tr>
+        <th>Test Case ID</th><th>Test Case Title</th><th>Test Objective</th><th>Preconditions</th><th>Test Steps</th><th>Test Data</th><th>Expected Result</th><th>Actual Result</th><th>Status</th><th>Priority</th><th>Tested By</th><th>Test Date</th>
+    </tr>
+    <tr>
+        <td>TC-31</td><td>Security: Route Protection</td><td>Block standard users from accessing /admin.</td><td>User logged in.</td><td>1. Access /admin manually.</td><td>Role: false</td><td>AdminRoute.jsx forces a redirect to / or shows Access Denied.</td><td>As Expected.</td><td class="pass">Pass</td><td>Critical</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-32</td><td>Security: JWT Expiration</td><td>Ensure old tokens cannot authorize downloads.</td><td>Token is 8 days old.</td><td>1. Trigger protected route.</td><td>Token: Expired</td><td>jsonwebtoken throws TokenExpiredError; user is logged out.</td><td>As Expected.</td><td class="pass">Pass</td><td>High</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-33</td><td>File Engine: Large File Size</td><td>Test storage boundaries on massive uploads.</td><td>Admin form active.</td><td>1. Upload a 5GB file.</td><td>Size: 5GB</td><td>If no size limit exists, server hangs or runs out of RAM.</td><td>Memory Exhaustion</td><td class="fail">Fail</td><td>Critical</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-34</td><td>File Engine: MIME Type Fake</td><td>Ensure users can't upload .exe files named .pdf.</td><td>Admin form active.</td><td>1. Upload virus.exe as virus.pdf.</td><td>File: Executable</td><td>Multer should ideally parse MIME type or block malicious extensions.</td><td>As Expected.</td><td class="pass">Pass</td><td>High</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+    <tr>
+        <td>TC-35</td><td>System Lifecycle: Database Drop</td><td>Verify frontend behavior if backend disconnects.</td><td>App is running.</td><td>1. Shut down MongoDB.</td><td>DB: Offline</td><td>Axios network calls fail gracefully, catching Network Error.</td><td>As Expected.</td><td class="pass">Pass</td><td>Low</td><td>QA-Eng</td><td>2026-06-12</td>
+    </tr>
+</table>
+
+</body>
+</html>

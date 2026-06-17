@@ -1,0 +1,195 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<title>Online Bookstore - Test Scenarios</title>
+<style>
+    body { font-family: Calibri, sans-serif; font-size: 11pt; }
+    h1 { text-align: center; color: #2F5496; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px; font-size: 10.5pt; }
+    th, td { border: 1px solid #8FAADC; padding: 8px; text-align: left; vertical-align: top; }
+    th { background-color: #D9E1F2; font-weight: bold; color: #2F5496; }
+</style>
+</head>
+<body>
+
+<h1>Online Bookstore - Master Test Scenarios</h1>
+
+<table>
+    <tr>
+        <th>Test ID</th>
+        <th>Component / Module</th>
+        <th>Scenario Description</th>
+        <th>Expected Behavior / Output</th>
+    </tr>
+    <tr>
+        <td>TS_01</td>
+        <td>Admin Authentication</td>
+        <td>Enter correct admin credentials in the login form.</td>
+        <td>Returns HTTP 200, sets JWT in localStorage, prints "Login successful!", and routes user to the Dashboard.</td>
+    </tr>
+    <tr>
+        <td>TS_02</td>
+        <td>Admin Authentication</td>
+        <td>Enter incorrect admin credentials (e.g., wrong password).</td>
+        <td>Returns HTTP 400, prints "Invalid credentials", and blocks access to the Admin Menu.</td>
+    </tr>
+    <tr>
+        <td>TS_03</td>
+        <td>Admin System</td>
+        <td>Upload a book when the server's uploads/ folder does not exist.</td>
+        <td>If unhandled, Multer throws ENOENT and crashes the server. (Should be handled gracefully by creating the folder).</td>
+    </tr>
+    <tr>
+        <td>TS_04</td>
+        <td>Input Validation</td>
+        <td>Register a user without an email address.</td>
+        <td>Mongoose validation fails, returns HTTP 400 "User validation failed: email: Path `email` is required."</td>
+    </tr>
+    <tr>
+        <td>TS_05</td>
+        <td>Input Validation</td>
+        <td>Register with a password length less than 6 characters (e.g., "123").</td>
+        <td>Mongoose validation intercepts it, returns "Path `password` is shorter than the minimum allowed length (6)."</td>
+    </tr>
+    <tr>
+        <td>TS_06</td>
+        <td>Input Validation</td>
+        <td>Register with an invalid email format (if Regex is applied).</td>
+        <td>Loops validation, returns HTTP 400 "Wrong email provided!", and asks the user for correction.</td>
+    </tr>
+    <tr>
+        <td>TS_07</td>
+        <td>Input Validation</td>
+        <td>Admin adds a book rating above 5 (e.g., 6 or 10).</td>
+        <td>Mongoose blocks the injection via min:0, max:5 constraints, preventing the UI star renderer from breaking.</td>
+    </tr>
+    <tr>
+        <td>TS_08</td>
+        <td>Input Validation</td>
+        <td>Admin uploads a book file that is not a PDF or EPUB.</td>
+        <td>Multer or Mongoose enum validation (['pdf', 'epub']) rejects the upload and prompts "Invalid file format."</td>
+    </tr>
+    <tr>
+        <td>TS_09</td>
+        <td>Inventory System</td>
+        <td>Register a valid book (Title, Author, Valid File, Valid Cover).</td>
+        <td>Saves metadata to MongoDB, saves binary files to local storage, and returns true/HTTP 201.</td>
+    </tr>
+    <tr>
+        <td>TS_10</td>
+        <td>Search & Filtering</td>
+        <td>Filter catalog for exactly 1 specific category (e.g., "Fiction").</td>
+        <td>React Context maps the requirement; backend queries {category: 'Fiction'} and returns filtered books.</td>
+    </tr>
+    <tr>
+        <td>TS_11</td>
+        <td>Search & Filtering</td>
+        <td>Search for a multi-word book title in the search bar.</td>
+        <td>Iterates via MongoDB $text index and assigns the highest relevancy match score to the top of the array.</td>
+    </tr>
+    <tr>
+        <td>TS_12</td>
+        <td>Search & Filtering</td>
+        <td>Search for an entirely made-up, non-existent book title.</td>
+        <td>Traverses the database, finds no match, and cleanly displays "No books available right now."</td>
+    </tr>
+    <tr>
+        <td>TS_13</td>
+        <td>Core Routing</td>
+        <td>Request book details for the exact same book sequentially.</td>
+        <td>React Router maintains state; Axios fetches the same _id and renders the BookDetails.jsx cleanly.</td>
+    </tr>
+    <tr>
+        <td>TS_14</td>
+        <td>Core Routing</td>
+        <td>Provide out-of-bounds inputs for book IDs via the URL (e.g., /book/1).</td>
+        <td>Mongoose intercepts the invalid 1-character hex string, throws a CastError, and catches it gracefully.</td>
+    </tr>
+    <tr>
+        <td>TS_15</td>
+        <td>Core Routing</td>
+        <td>Navigate to a frontend React route that doesn't exist (e.g., /ghostpage).</td>
+        <td>React Router intercepts, falls back to the * wildcard route, and displays a standard 404 Component.</td>
+    </tr>
+    <tr>
+        <td>TS_16</td>
+        <td>Core Routing</td>
+        <td>Compute standard pagination (e.g., Route from Page 1 to Page 2).</td>
+        <td>Backend calculates skip = (page - 1) * limit. Correctly fetches items 13-24 from the database.</td>
+    </tr>
+    <tr>
+        <td>TS_17</td>
+        <td>File Downloading</td>
+        <td>Request a file download when the target file has been manually deleted from the server.</td>
+        <td>Express res.download() fallback hits; throws an error gracefully rather than freezing the browser tab.</td>
+    </tr>
+    <tr>
+        <td>TS_18</td>
+        <td>File Downloading</td>
+        <td>Download a valid book file as an authenticated user.</td>
+        <td>Leverages fs streams to transfer the PDF and correctly increments book.downloadCount += 1.</td>
+    </tr>
+    <tr>
+        <td>TS_19</td>
+        <td>Favorites Tracking</td>
+        <td>View the Favorites Page immediately after clicking the heart icon on a book.</td>
+        <td>React state updates instantly; Database array pushes the Book ID, displaying the book on the /favorites route.</td>
+    </tr>
+    <tr>
+        <td>TS_20</td>
+        <td>Favorites Tracking</td>
+        <td>View the Favorites Page when no books have been bookmarked during the session.</td>
+        <td>Target array is empty []; frontend maps safely and prints "You have no favorite books yet."</td>
+    </tr>
+    <tr>
+        <td>TS_21</td>
+        <td>Session Actions</td>
+        <td>Admin deletes a valid active book tracked in the current database.</td>
+        <td>findByIdAndDelete() successfully detaches the target, removes MongoDB metadata, and deletes physical files.</td>
+    </tr>
+    <tr>
+        <td>TS_22</td>
+        <td>Session Actions</td>
+        <td>Admin attempts to delete a book ID that does not exist or was already deleted.</td>
+        <td>Database traverses up to NULL, misses target value, and safely returns 404 "Book not found".</td>
+    </tr>
+    <tr>
+        <td>TS_23</td>
+        <td>Authorization Engine</td>
+        <td>Submit an API request using an expired JSON Web Token.</td>
+        <td>Authentication middleware intercepts entry, prints "Token Expired!", and restarts the login flow.</td>
+    </tr>
+    <tr>
+        <td>TS_24</td>
+        <td>System Lifecycle</td>
+        <td>User clicks "Logout" from the Navigation Bar.</td>
+        <td>Frontend bypasses state hooks, triggers localStorage.removeItem('token'), and routes safely to Home.</td>
+    </tr>
+    <tr>
+        <td>TS_25</td>
+        <td>Data Persistence</td>
+        <td>Attempt to register a user when the MongoDB service is offline or disconnected.</td>
+        <td>Mongoose connection failure triggers; frontend will throw a Network Error without hard-crashing the DOM.</td>
+    </tr>
+    <tr>
+        <td>TS_26</td>
+        <td>API Exploitation</td>
+        <td>Input a negative number or zero for pagination when fetching books (e.g., ?page=-3).</td>
+        <td>The skip logic calculates negative bounds. Mongoose should override negative skips to 0 to prevent crashes.</td>
+    </tr>
+    <tr>
+        <td>TS_27</td>
+        <td>API Exploitation</td>
+        <td>Request a massive payload limit from the database (e.g., ?limit=1000000).</td>
+        <td>MongoDB iterates the cursor for millions of documents. Server should enforce a maximum cap (e.g., 50) to prevent RAM exhaustion.</td>
+    </tr>
+    <tr>
+        <td>TS_28</td>
+        <td>Buffer Overflow</td>
+        <td>Enter a massive JSON body string during registration that drastically exceeds standard memory sizes.</td>
+        <td>Express.json({limit: '10kb'}) should intercept and halt the payload, preventing the server from freezing due to Denial of Service (DoS).</td>
+    </tr>
+</table>
+
+</body>
+</html>

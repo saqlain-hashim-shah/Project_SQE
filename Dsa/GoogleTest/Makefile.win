@@ -1,0 +1,31 @@
+# Project: GoogleTest
+# Makefile created by Embarcadero Dev-C++ 6.3
+
+CPP      = g++.exe
+CC       = gcc.exe
+WINDRES  = windres.exe
+OBJ      = Testcase.o googletest-release-1.8.1/googletest-release-1.8.1/googletest/src/gtest-all.o
+LINKOBJ  = Testcase.o googletest-release-1.8.1/googletest-release-1.8.1/googletest/src/gtest-all.o
+LIBS     = -L"C:/Program Files (x86)/Embarcadero/Dev-Cpp/TDM-GCC-64/lib" -L"C:/Program Files (x86)/Embarcadero/Dev-Cpp/TDM-GCC-64/x86_64-w64-mingw32/lib" -L""""""""D:/Sqeproject/Dsa/GoogleTest/googletest-release-1.8.1/googletest-release-1.8.1/googletest/src"""""""" -L""""-I""""D:/Sqeproject/Dsa/GoogleTest/googletest-release-1.8.1/googletest-release-1.8.1/googletest/src"""""""" -static-libgcc -L"D:/DSA/googletest-release-1.8.1/googletest-release-1.8.1/googletest/include"
+INCS     = -I"C:/Program Files (x86)/Embarcadero/Dev-Cpp/TDM-GCC-64/include" -I"C:/Program Files (x86)/Embarcadero/Dev-Cpp/TDM-GCC-64/x86_64-w64-mingw32/include" -I"C:/Program Files (x86)/Embarcadero/Dev-Cpp/TDM-GCC-64/lib/gcc/x86_64-w64-mingw32/9.2.0/include" -I""""""""D:/Sqeproject/Dsa/GoogleTest/googletest-release-1.8.1/googletest-release-1.8.1/googletest/include""""""""
+CXXINCS  = -I"C:/Program Files (x86)/Embarcadero/Dev-Cpp/TDM-GCC-64/include" -I"C:/Program Files (x86)/Embarcadero/Dev-Cpp/TDM-GCC-64/x86_64-w64-mingw32/include" -I"C:/Program Files (x86)/Embarcadero/Dev-Cpp/TDM-GCC-64/lib/gcc/x86_64-w64-mingw32/9.2.0/include" -I"C:/Program Files (x86)/Embarcadero/Dev-Cpp/TDM-GCC-64/lib/gcc/x86_64-w64-mingw32/9.2.0/include/c++"
+BIN      = GoogleTest.exe
+CXXFLAGS = $(CXXINCS) -I"D:\Sqeproject\Dsa\GoogleTest\googletest-release-1.8.1\googletest-release-1.8.1\googletest\include" -I"D:\Sqeproject\Dsa\GoogleTest\googletest-release-1.8.1\googletest-release-1.8.1\googletest"
+CFLAGS   = $(INCS) 
+DEL      = C:\Program Files (x86)\Embarcadero\Dev-Cpp\devcpp.exe INTERNAL_DEL
+
+.PHONY: all all-before all-after clean clean-custom
+
+all: all-before $(BIN) all-after
+
+clean: clean-custom
+	${DEL} $(OBJ) $(BIN)
+
+$(BIN): $(OBJ)
+	$(CPP) $(LINKOBJ) -o $(BIN) $(LIBS)
+
+Testcase.o: Testcase.cpp
+	$(CPP) -c Testcase.cpp -o Testcase.o $(CXXFLAGS)
+
+googletest-release-1.8.1/googletest-release-1.8.1/googletest/src/gtest-all.o: googletest-release-1.8.1/googletest-release-1.8.1/googletest/src/gtest-all.cc
+	$(CPP) -c googletest-release-1.8.1/googletest-release-1.8.1/googletest/src/gtest-all.cc -o googletest-release-1.8.1/googletest-release-1.8.1/googletest/src/gtest-all.o $(CXXFLAGS)

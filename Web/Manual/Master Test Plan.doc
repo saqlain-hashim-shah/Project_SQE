@@ -1,0 +1,205 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<title>Online Bookstore - Master Test Plan</title>
+<style>
+    body { font-family: Calibri, sans-serif; font-size: 11pt; }
+    h1 { text-align: center; color: #2F5496; }
+    h2 { color: #FFFFFF; background-color: #2F5496; padding: 5px; margin-top: 30px; }
+    h3 { color: #1F3864; margin-bottom: 5px; }
+    ul { margin-top: 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px; font-size: 10pt; }
+    th, td { border: 1px solid #8FAADC; padding: 6px; text-align: left; vertical-align: top; }
+    th { background-color: #D9E1F2; font-weight: bold; color: #2F5496; }
+</style>
+</head>
+<body>
+
+<h1>Online Bookstore - Master Test Plan</h1>
+
+<h2>Part 1: Core Functional Test Plans</h2>
+
+<h3>1. User Registration Integrity Test Plan</h3>
+<ul>
+    <li><b>Objective:</b> Validate input sanitization, data constraints, and persistence for new shoppers.</li>
+    <li><b>Strategy:</b> Perform equivalence partitioning and boundary value analysis on inputs (name, email, password length).</li>
+    <li><b>Pass Criteria:</b> Passwords under 6 digits are rejected; invalid emails fail; records securely write to MongoDB with bcrypt hashed passwords.</li>
+</ul>
+
+<h3>2. Admin Onboarding & Privilege Guardrail Test Plan</h3>
+<ul>
+    <li><b>Objective:</b> Validate admin authorization and role-based access logic.</li>
+    <li><b>Strategy:</b> Test role escalation boundaries by injecting isAdmin: true via Postman during normal user registration.</li>
+    <li><b>Pass Criteria:</b> System ignores injected admin payloads; successful users are defaulted to standard privileges and routed to the home page.</li>
+</ul>
+
+<h3>3. JWT Authentication & Session Security Test Plan</h3>
+<ul>
+    <li><b>Objective:</b> Stress-test the Express.js credential gateway and token issuance.</li>
+    <li><b>Strategy:</b> Execute incorrect credential submissions, empty string payloads, and attempt to access protected endpoints with expired/tampered JWTs.</li>
+    <li><b>Pass Criteria:</b> API rejects all unauthorized variants; tampered JWTs throw JsonWebTokenError; valid logins return secure tokens.</li>
+</ul>
+
+<h3>4. Search Engine & Category Filtering Test Plan</h3>
+<ul>
+    <li><b>Objective:</b> Verify the MongoDB text index and exact-match category filtering logic.</li>
+    <li><b>Strategy:</b> Inject broad text searches (e.g., "Fiction", "Potter") and non-existent queries to check the $text query behavior in books.js.</li>
+    <li><b>Pass Criteria:</b> System retrieves all relevant documents; returns an empty array safely without crashing when no matching books exist.</li>
+</ul>
+
+<h3>5. API Endpoint Architecture Mapping Test Plan</h3>
+<ul>
+    <li><b>Objective:</b> Validate structural accuracy of the Express Router and RESTful paths.</li>
+    <li><b>Strategy:</b> Explicitly traverse all defined routes (GET /api/books, POST /api/auth/login) with proper and improper HTTP methods.</li>
+    <li><b>Pass Criteria:</b> Every route responds matching its geographic identifier (200 OK); 404s route to a catch-all safety handler.</li>
+</ul>
+
+<h3>6. Pagination & Data Fetching (Limit/Skip) Test Plan</h3>
+<ul>
+    <li><b>Objective:</b> Verify mathematical optimization of the database fetching algorithm.</li>
+    <li><b>Strategy:</b> Compare programmatic limit=12 and skip calculation outputs across page 1, 2, and 100.</li>
+    <li><b>Pass Criteria:</b> Mathematical skip logic dynamically slices database arrays perfectly; out-of-bounds pages return empty data instead of crashing.</li>
+</ul>
+
+<h3>7. File Upload & Multer Processing Test Plan</h3>
+<ul>
+    <li><b>Objective:</b> Validate multipart/form-data handling via Multer for Book uploads.</li>
+    <li><b>Strategy:</b> Upload .pdf and .epub files sequentially, tracing system storage creation inside the uploads/ directory.</li>
+    <li><b>Pass Criteria:</b> Files are successfully wrapped, safely renamed to avoid collisions, and properly appended to the server storage block.</li>
+</ul>
+
+<h3>8. Book Deletion & Storage Cleanup Test Plan</h3>
+<ul>
+    <li><b>Objective:</b> Ensure memory and hard drive safety during administrative deletions.</li>
+    <li><b>Strategy:</b> Test three target states: Deleting a valid book, deleting an already deleted book, and attempting to delete a book with corrupted file paths.</li>
+    <li><b>Pass Criteria:</b> Node documents delete from DB; fs.unlink() safely removes orphaned files from the hard drive with zero storage leaks.</li>
+</ul>
+
+<h3>9. User Favorites/Wishlist Array Collection Test Plan</h3>
+<ul>
+    <li><b>Objective:</b> Ensure Book IDs push and pull from User profiles correctly.</li>
+    <li><b>Strategy:</b> Supply rapid toggle inputs to the favorites endpoint to test the includes() boolean logic.</li>
+    <li><b>Pass Criteria:</b> First click pushes ID to the MongoDB array; second click splices/removes it; array limits prevent memory bloating.</li>
+</ul>
+
+<h3>10. Book Detail Page Fetching Test Plan</h3>
+<ul>
+    <li><b>Objective:</b> Verify dynamic URL parameter passing and MongoDB findById().</li>
+    <li><b>Strategy:</b> Pass valid hex strings and simulate clicking 1,000 different BookCard components in React.</li>
+    <li><b>Pass Criteria:</b> Frontend fetches demonstrate balanced state management; fallback 404 component renders if the book is deleted mid-session.</li>
+</ul>
+
+<h2>Part 2: Non-Functional & Structural Test Plans</h2>
+
+<h3>11. MongoDB Connection Failure Test Plan</h3>
+<ul>
+    <li><b>Objective:</b> Evaluate application resilience when missing database connectivity.</li>
+    <li><b>Strategy:</b> Shut down the local MongoDB service or alter the .env URI string, then run storefront loading options.</li>
+    <li><b>Pass Criteria:</b> System intercepts missing connection gracefully via Mongoose error wrapper without terminating the entire Node instance.</li>
+</ul>
+
+<h3>12. Express Middleware Chain Stability Test Plan</h3>
+<ul>
+    <li><b>Objective:</b> Mitigate server hanging risks stemming from unresolved middleware.</li>
+    <li><b>Strategy:</b> Programmatically simulate requests missing authorization headers to verify next() and res.send() execution chains.</li>
+    <li><b>Pass Criteria:</b> The runtime call stack handles continuous unauthorized pings safely, returning HTTP 401 without hanging the browser.</li>
+</ul>
+
+<h3>13. Request Body Pollution (JSON Parsing) Test Plan</h3>
+<ul>
+    <li><b>Objective:</b> Assess API robustness when encountering unexpected JSON data types.</li>
+    <li><b>Strategy:</b> Inject massive arrays or nested objects into standard String fields during registration (e.g., email: ["array", "injection"]).</li>
+    <li><b>Pass Criteria:</b> express.json() and validation routines cleanly isolate or cast inputs without cascading execution skips.</li>
+</ul>
+
+<h3>14. NodeJS Memory Leak & File Descriptor Lifecycle Test Plan</h3>
+<ul>
+    <li><b>Objective:</b> Track heap allocations inside file streaming operations.</li>
+    <li><b>Strategy:</b> Run continuous download/upload profiles on the /download endpoint using diagnostic monitoring tools.</li>
+    <li><b>Pass Criteria:</b> Destroyed file streams are freed correctly; heap utilization returns to baseline after a user finishes downloading a PDF.</li>
+</ul>
+
+<h3>15. Cross-Browser & Environment Variable Dependency Test Plan</h3>
+<ul>
+    <li><b>Objective:</b> Verify compatibility across standard browser environments.</li>
+    <li><b>Strategy:</b> Execute the React SPA using modern browsers (Chrome, Firefox, Safari) and test missing .env variables on the backend.</li>
+    <li><b>Pass Criteria:</b> Frontend handles CORS smoothly; missing ENV variables trigger console warnings but fall back to safe defaults if configured.</li>
+</ul>
+
+<h2>Part 3: Operational, Business Logic & Edge Case Test Plans</h2>
+
+<h3>16. API Array Bounds Overflow Test Plan</h3>
+<ul>
+    <li><b>Objective:</b> Ensure stability when pagination faces unexpectedly high index values.</li>
+    <li><b>Strategy:</b> Evaluate the skip calculation skip = (page - 1) * limit when handling ?page=9999999.</li>
+    <li><b>Pass Criteria:</b> The API catches out-of-bounds queries before processing, returning an empty array rather than exhausting database lookup memory.</li>
+</ul>
+
+<h3>17. Empty Database State Initialization Test Plan</h3>
+<ul>
+    <li><b>Objective:</b> Verify app UI performance during zero-data fresh installations.</li>
+    <li><b>Strategy:</b> Initialize the app with entirely blank MongoDB collections across all functional menus.</li>
+    <li><b>Pass Criteria:</b> Frontend components display descriptive "No books found" empty states instead of crashing due to mapping over undefined properties.</li>
+</ul>
+
+<h3>18. Multi-Paragraph Book Description Parsing Test Plan</h3>
+<ul>
+    <li><b>Objective:</b> Ensure multi-word descriptions preserve formatting inside the UI.</li>
+    <li><b>Strategy:</b> Submit a detailed textual review string using standard spacing, line breaks, and indentation.</li>
+    <li><b>Pass Criteria:</b> The application captures the full block of text without parsing spaces as code, and React renders \n tags as proper CSS breaks.</li>
+</ul>
+
+<h3>19. Duplicate Book Title Validation Test Plan</h3>
+<ul>
+    <li><b>Objective:</b> Check logic behavior when encountering duplicate book details.</li>
+    <li><b>Strategy:</b> Register two distinct books using matching titles, authors, and categories by the admin.</li>
+    <li><b>Pass Criteria:</b> Depending on schema constraints, the system either appends them linearly or throws a MongoDB DuplicateKey error safely.</li>
+</ul>
+
+<h3>20. Multi-User Concurrent API Fetch Scalability Test Plan</h3>
+<ul>
+    <li><b>Objective:</b> Benchmark dynamic memory growth under extended sequential load.</li>
+    <li><b>Strategy:</b> Simulate fetching the homepage 500 consecutive times concurrently using an automated testing suite.</li>
+    <li><b>Pass Criteria:</b> Node event loop processes queues predictably without processing degradation or HTTP 503 timeouts.</li>
+</ul>
+
+<h2>Part 4: Advanced Edge-Case & Destructive Test Plans</h2>
+
+<table>
+    <tr>
+        <th>Plan ID</th><th>Test Plan Module</th><th>Operational Strategy</th><th>Target Pass Criteria</th>
+    </tr>
+    <tr>
+        <td>21</td><td>Same-User Duplicate Favorite Toggle Test Plan</td><td>Send rapid sequential POST requests to favorite the exact same book ID.</td><td>The includes() array method prevents adding the same _id twice; returns clean success message.</td>
+    </tr>
+    <tr>
+        <td>22</td><td>Extreme Numeric Rating Overflow Test Plan</td><td>Input extreme boundaries (e.g., -2147483648, 999999) into rating systems via Postman.</td><td>Mongoose Schema validators flag limits (0 to 5) as invalid; avoids injecting bad data to UI.</td>
+    </tr>
+    <tr>
+        <td>23</td><td>Querying Non-Existent MongoDB IDs</td><td>Query a route linking /book/123 (invalid hex length) to the backend.</td><td>API catches the CastError, returning a clean 400 Bad Request or 404 warning.</td>
+    </tr>
+    <tr>
+        <td>24</td><td>NoSQL Injection & XSS Input Test Plan</td><td>Inject format tags and script payloads (&#60;script&#62;alert(1)&#60;/script&#62;, {"$gt": ""}) into search fields.</td><td>React auto-escapes scripts; Mongoose neutralizes NoSQL query structures before database execution.</td>
+    </tr>
+    <tr>
+        <td>25</td><td>Zero Limit Pagination Request Test Plan</td><td>Input exactly 0 as the page limit count in the query parameter ?limit=0.</td><td>Backend enforces a minimum limit override or handles limit(0) safely without crashing the cursor.</td>
+    </tr>
+    <tr>
+        <td>26</td><td>Network Drop Mid-File Upload Test Plan</td><td>Force a manual network disconnect mid-way through uploading a 20MB PDF.</td><td>Multer stream aborts; File system clears partial/corrupted temporary data blocks.</td>
+    </tr>
+    <tr>
+        <td>27</td><td>ASCII Control Character JSON Test Plan</td><td>Enter non-printable ASCII control codes into the JSON body during registration.</td><td>System validation filters out control codes; prevents JSON.parse() crashes.</td>
+    </tr>
+    <tr>
+        <td>28</td><td>High Volume Book Database Stress Test Plan</td><td>Load a massive list of 100,000 dummy books into MongoDB to stress test search functions.</td><td>Database indexes text efficiently; response times remain under 200ms without memory limits.</td>
+    </tr>
+    <tr>
+        <td>29</td><td>React Infinite Re-Render Prevention Scale Test Plan</td><td>Write a useEffect hook missing a dependency array and monitor the DOM.</td><td>Linters catch the error; the browser memory footprint remains stable without freezing the tab.</td>
+    </tr>
+    <tr>
+        <td>30</td><td>Multer Write-Protection Recovery Test Plan</td><td>Mark the server uploads/ folder as Read-Only before runtime access attempts.</td><td>The fs wrapper catches permission (EACCES) flags gracefully, alerting admins without server crashes.</td>
+    </tr>
+</table>
+
+</body>
+</html>

@@ -1,0 +1,175 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<title>Bug Reports - Online Bookstore</title>
+<style>
+    body { font-family: Calibri, sans-serif; }
+    h1 { text-align: center; color: #2F5496; }
+    h3 { color: #2F5496; margin-top: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+    th, td { border: 1px solid #000; padding: 8px; text-align: left; vertical-align: top; }
+    th { background-color: #D9E1F2; width: 25%; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h1>Online Bookstore - Bug Reports</h1>
+
+<h3>Bug Report #1: Unrestricted File Upload Size (Denial of Service)</h3>
+<table>
+    <tr><th>Field</th><td>Details</td></tr>
+    <tr><th>Bug ID</th><td>BUG-001</td></tr>
+    <tr><th>Summary</th><td>Admins can upload excessively large book files (PDF/EPUB) or cover images without any size limits, potentially crashing the server or exhausting storage space.</td></tr>
+    <tr><th>Component</th><td>AdminDashboard.jsx & Multer Upload Middleware</td></tr>
+    <tr><th>Severity</th><td>High (Resource Exhaustion / DoS)</td></tr>
+    <tr><th>Steps to Reproduce</th><td>
+        1. Log in as an Admin and navigate to the Admin Dashboard.<br>
+        2. Select "Add New Book".<br>
+        3. Upload a massive file (e.g., a 5GB dummy file) in the Book File input.<br>
+        4. Click Submit.
+    </td></tr>
+    <tr><th>Expected Result</th><td>The frontend or backend should validate the file size and reject files larger than a reasonable limit (e.g., 50MB for books, 5MB for covers).</td></tr>
+    <tr><th>Actual Result</th><td>Multer attempts to buffer and save the massive file, causing the Node.js server to run out of memory or exhaust hard drive space.</td></tr>
+</table>
+
+<h3>Bug Report #2: Unhandled NaN in Pagination Logic</h3>
+<table>
+    <tr><th>Field</th><td>Details</td></tr>
+    <tr><th>Bug ID</th><td>BUG-002</td></tr>
+    <tr><th>Summary</th><td>Passing non-numeric string values to the page query parameter breaks the pagination logic and throws database errors.</td></tr>
+    <tr><th>Component</th><td>routes/books.js (router.get('/'))</td></tr>
+    <tr><th>Severity</th><td>Medium (API Crash / Unhandled Exception)</td></tr>
+    <tr><th>Steps to Reproduce</th><td>
+        1. Open the application or an API testing tool like Postman.<br>
+        2. Send a GET request to /api/books?page=abc.
+    </td></tr>
+    <tr><th>Expected Result</th><td>The API should validate if page is a valid number. If not, it should default to page=1 or return a 400 Bad Request error.</td></tr>
+    <tr><th>Actual Result</th><td>The server calculates skip = ("abc" - 1) * limit, resulting in NaN, causing Mongoose to throw an unhandled rejection.</td></tr>
+</table>
+
+<h3>Bug Report #3: Storage Leak on Book Deletion (Orphaned Files)</h3>
+<table>
+    <tr><th>Field</th><td>Details</td></tr>
+    <tr><th>Bug ID</th><td>BUG-003</td></tr>
+    <tr><th>Summary</th><td>When an admin deletes a book from the database, the associated physical PDF/EPUB and cover image files are not deleted from the server's uploads/ folder.</td></tr>
+    <tr><th>Component</th><td>routes/admin.js (router.delete('/:id'))</td></tr>
+    <tr><th>Severity</th><td>Medium (Storage/Memory Leak)</td></tr>
+    <tr><th>Steps to Reproduce</th><td>
+        1. Add a new book with a 10MB PDF file.<br>
+        2. Go to the Admin Dashboard and delete that book.<br>
+        3. Check the local uploads/ directory on the server.
+    </td></tr>
+    <tr><th>Expected Result</th><td>The backend should utilize fs.unlink() to physically remove the files from the disk before deleting the database document.</td></tr>
+    <tr><th>Actual Result</th><td>The MongoDB document is deleted, but the file remains permanently in the uploads/ folder, leading to storage bloat.</td></tr>
+</table>
+
+<h3>Bug Report #4: Missing Email Regex Validation</h3>
+<table>
+    <tr><th>Field</th><td>Details</td></tr>
+    <tr><th>Bug ID</th><td>BUG-004</td></tr>
+    <tr><th>Summary</th><td>The User model does not enforce proper email formatting, allowing users to register with syntactically invalid strings.</td></tr>
+    <tr><th>Component</th><td>models/User.js & routes/auth.js</td></tr>
+    <tr><th>Severity</th><td>Medium (Data Integrity Bypass)</td></tr>
+    <tr><th>Steps to Reproduce</th><td>
+        1. Navigate to the Registration page.<br>
+        2. Enter "notanemail" or "user@.com." in the email field.<br>
+        3. Fill out the password and click Register.
+    </td></tr>
+    <tr><th>Expected Result</th><td>The backend Mongoose schema should reject the input using a match: /regex/ validation, returning a 400 error.</td></tr>
+    <tr><th>Actual Result</th><td>Mongoose only checks that the field is a String. The invalid string is successfully saved into the database.</td></tr>
+</table>
+
+<h3>Bug Report #5: Duplicate Book Titles Allowed</h3>
+<table>
+    <tr><th>Field</th><td>Details</td></tr>
+    <tr><th>Bug ID</th><td>BUG-005</td></tr>
+    <tr><th>Summary</th><td>The system allows an admin to accidentally add the exact same book multiple times, leading to duplicate records in the database.</td></tr>
+    <tr><th>Component</th><td>models/Book.js</td></tr>
+    <tr><th>Severity</th><td>Low (Data Clutter/Inconsistency)</td></tr>
+    <tr><th>Steps to Reproduce</th><td>
+        1. Log into the Admin Dashboard.<br>
+        2. Add a book titled "Harry Potter".<br>
+        3. Immediately add another book with the exact same title and author.
+    </td></tr>
+    <tr><th>Expected Result</th><td>The system should reject the duplicate entry based on a unique constraint on the title.</td></tr>
+    <tr><th>Actual Result</th><td>The database creates two entirely separate entries, showing the same book twice on the user homepage.</td></tr>
+</table>
+
+<h3>Bug Report #6: Server Crash on Missing "Uploads" Directory</h3>
+<table>
+    <tr><th>Field</th><td>Details</td></tr>
+    <tr><th>Bug ID</th><td>BUG-006</td></tr>
+    <tr><th>Summary</th><td>If the uploads/ directory is missing on a fresh deployment, attempting to add a book crashes the Node.js process.</td></tr>
+    <tr><th>Component</th><td>Backend Multer Configuration</td></tr>
+    <tr><th>Severity</th><td>High (Unexpected Application Termination)</td></tr>
+    <tr><th>Steps to Reproduce</th><td>
+        1. Clone the project to a new machine and run npm install.<br>
+        2. Do not manually create an uploads/ folder.<br>
+        3. Log in as an admin and attempt to upload a book file.
+    </td></tr>
+    <tr><th>Expected Result</th><td>The server should check if the directory exists and create it dynamically using fs.mkdirSync().</td></tr>
+    <tr><th>Actual Result</th><td>Multer throws an ENOENT error when trying to write the stream, instantly crashing the Express.js server.</td></tr>
+</table>
+
+<h3>Bug Report #7: Rating Field Vulnerable to Out-of-Bounds Values</h3>
+<table>
+    <tr><th>Field</th><td>Details</td></tr>
+    <tr><th>Bug ID</th><td>BUG-007</td></tr>
+    <tr><th>Summary</th><td>An admin could potentially bypass frontend forms via direct API requests and set invalid numbers if validation isn't strictly caught during updates.</td></tr>
+    <tr><th>Component</th><td>routes/admin.js (Update Book Route)</td></tr>
+    <tr><th>Severity</th><td>Low (Data Inconsistency)</td></tr>
+    <tr><th>Steps to Reproduce</th><td>
+        1. Intercept a PUT request to update a book using Postman.<br>
+        2. Send a JSON payload changing the rating to 999.
+    </td></tr>
+    <tr><th>Expected Result</th><td>The backend findByIdAndUpdate should run validators to enforce the max: 5 rule.</td></tr>
+    <tr><th>Actual Result</th><td>If runValidators: true is missing, Mongoose forcefully injects the 999 rating, breaking UI star-rating components.</td></tr>
+</table>
+
+<h3>Bug Report #8: Local Storage Token Leak on Logout Failure</h3>
+<table>
+    <tr><th>Field</th><td>Details</td></tr>
+    <tr><th>Bug ID</th><td>BUG-008</td></tr>
+    <tr><th>Summary</th><td>If the application encounters an error during the logout process, the JWT remains in the browser's localStorage, leaving the session vulnerable.</td></tr>
+    <tr><th>Component</th><td>contexts/AuthContext.jsx & Navbar.jsx</td></tr>
+    <tr><th>Severity</th><td>Medium (Security / Session Hijacking)</td></tr>
+    <tr><th>Steps to Reproduce</th><td>
+        1. Log in as a User.<br>
+        2. Trigger a state error or network drop before clicking "Logout".<br>
+        3. Click Logout.
+    </td></tr>
+    <tr><th>Expected Result</th><td>localStorage.removeItem('token') should execute unconditionally whenever the user intends to log out.</td></tr>
+    <tr><th>Actual Result</th><td>If the logout function relies on an API call that fails, the local state might not clear the token, remaining authenticated.</td></tr>
+</table>
+
+<h3>Bug Report #9: Download Endpoint Path Traversal Risk</h3>
+<table>
+    <tr><th>Field</th><td>Details</td></tr>
+    <tr><th>Bug ID</th><td>BUG-009</td></tr>
+    <tr><th>Summary</th><td>If the filePath stored in the database is ever compromised, the download endpoint could be used to download sensitive server files.</td></tr>
+    <tr><th>Component</th><td>routes/books.js (router.get('/:id/download'))</td></tr>
+    <tr><th>Severity</th><td>Critical (Security Vulnerability)</td></tr>
+    <tr><th>Steps to Reproduce</th><td>
+        1. Manually edit a book document in MongoDB, changing filePath to ../../../../etc/passwd.<br>
+        2. Log into the frontend and click "Download" on that specific book.
+    </td></tr>
+    <tr><th>Expected Result</th><td>res.download() should strictly sanitize and confine file paths to the uploads/ directory using path.join.</td></tr>
+    <tr><th>Actual Result</th><td>res.download(path.resolve(book.filePath)) trusts the database string blindly, potentially downloading system files.</td></tr>
+</table>
+
+<h3>Bug Report #10: Favorites Array Unbounded Growth</h3>
+<table>
+    <tr><th>Field</th><td>Details</td></tr>
+    <tr><th>Bug ID</th><td>BUG-010</td></tr>
+    <tr><th>Summary</th><td>The favorites array in the User model has no maximum limit, which can degrade database performance for power users.</td></tr>
+    <tr><th>Component</th><td>routes/books.js (router.post('/:id/favorite'))</td></tr>
+    <tr><th>Severity</th><td>Low (Performance Degradation)</td></tr>
+    <tr><th>Steps to Reproduce</th><td>
+        1. Write an automated script to call the favorite endpoint 10,000 times with different book IDs.
+    </td></tr>
+    <tr><th>Expected Result</th><td>The backend should limit the user's favorites array (e.g., maximum 500 books) and return an error if exceeded.</td></tr>
+    <tr><th>Actual Result</th><td>The MongoDB document grows indefinitely, which could eventually corrupt the user's account and cause timeouts.</td></tr>
+</table>
+
+</body>
+</html>
